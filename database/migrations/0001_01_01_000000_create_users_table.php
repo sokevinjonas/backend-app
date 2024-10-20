@@ -19,8 +19,9 @@ return new class extends Migration
             $table->string('email')->unique()->nullable();
             $table->string('logo')->nullable();
             $table->string('nom');
+            $table->unique(['pays', 'telephone'], 'unique_pays_telephone');
             $table->string('pays');
-            $table->string('telephone')->unique();
+            $table->string('telephone');
             $table->string('role');
             $table->string('password');
             $table->boolean('terms');
