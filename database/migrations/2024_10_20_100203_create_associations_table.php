@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('associations', function (Blueprint $table) {
             $table->id();
+            $table->string('tissuNom');
+            $table->string('tissuImageUrl');
+            $table->json('modeles'); // stocker les modèles sous forme de JSON
             $table->timestamps();
         });
     }

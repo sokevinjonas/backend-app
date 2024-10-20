@@ -11,11 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('commandes', function (Blueprint $table) {
             $table->id();
             $table->string('matricule_user');
-            $table->string('label');
+            $table->string('status');
+            $table->string('numero_client');
+            $table->text('detail');
+            $table->text('besoin');
+            $table->decimal('total', 10, 2);
+            $table->decimal('avance', 10, 2);
+            $table->decimal('reste', 10, 2);
+            $table->date('livraison');
             $table->foreign('matricule_user')->references('matricule')->on('users')->onDelete('cascade');
+            $table->foreign('numero_client')->references('numero_client')->on('clients')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -25,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('commandes');
     }
 };

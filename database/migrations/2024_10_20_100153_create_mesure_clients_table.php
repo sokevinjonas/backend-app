@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('mesure_clients', function (Blueprint $table) {
             $table->id();
+            $table->string('matricule_user');
+            $table->string('numero_client');
+            $table->json('mesures');
+            $table->foreign('matricule_user')->references('matricule')->on('users')->onDelete('cascade');
+            $table->foreign('numero_client')->references('numero_client')->on('clients')->onDelete('cascade');
             $table->timestamps();
         });
     }

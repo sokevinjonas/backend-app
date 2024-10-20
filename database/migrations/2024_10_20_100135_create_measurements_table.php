@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('measurements', function (Blueprint $table) {
             $table->id();
+            $table->string('category');
+            $table->string('matricule_user');
+            $table->string('label');
+            $table->foreign('matricule_user')->references('matricule')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

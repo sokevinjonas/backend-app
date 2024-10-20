@@ -13,7 +13,15 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
+            $table->string('matricule_user');
+            $table->string('numero_client')->unique();
+            $table->string('nom');
+            $table->string('pays');
+            $table->string('telephone');
+            $table->string('sexe');
+            $table->date('dateAnniv');
             $table->timestamps();
+            $table->foreign('matricule_user')->references('matricule')->on('users')->onDelete('cascade');
         });
     }
 
