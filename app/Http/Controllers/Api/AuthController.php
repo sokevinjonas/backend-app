@@ -54,16 +54,42 @@ class AuthController extends Controller
             'terms' => $request->terms,
         ]);
 
-        // Génération d'un jeton d'API pour l'utilisateur
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         // Retourner les données de l'utilisateur et le jeton
         return response()->json([
             'message' => 'Utilisateur créé avec succès',
             'user' => $user,
-            'access_token' => $token,
-            'token_type' => 'Bearer',
         ], 201);
+    }
+
+    // Méthode pour le login de l'utilisateur
+    public function login(Request $request)
+    {
+        // Valider les données de la requête
+        $validatedData = $request->validate([
+            'pays' => 'required|string',
+            'telephone' => 'required|string',
+            'password' => 'required|strin',
+        ]);
+
+        // Vérifier si un utilisateur existe avec le pays et le téléphone
+        $user = User::where('pays', $validatedData['pays'])
+                    ->where('telephone', $validatedData['telephone'])
+                    ->first();
+
+        // Vérifier si les informations de connexion sont correctes
+        if (!$user || !Hash::check($validatedData['password'], $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
+        // Générer un token pour l'utilisateur
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Retourner la réponse avec le token
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => $user,
+            'token' => $token,
+        ]);
     }
 
 }

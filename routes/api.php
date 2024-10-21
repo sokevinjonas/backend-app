@@ -10,11 +10,13 @@ use App\Http\Controllers\Api\SyncController;
 // })->middleware('auth:sanctum');
 
 Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register']);
 
 Route::post('/sync/users', [SyncController::class, 'syncUsers']);
 Route::post('/sync/categories', [SyncController::class, 'syncCategories']);
 Route::post('/sync/measurements', [SyncController::class, 'syncMeasurements']);
+Route::delete('/sync/measurements/{matricule_user}', [SyncController::class, 'deleteMeasurement']);
+// Route::put('/sync/measurements/{matricule_user}', [SyncController::class, 'updateMeasurements']);
 Route::post('/sync/clients', [SyncController::class, 'syncClients']);
 Route::post('/sync/commandes', [SyncController::class, 'syncCommandes']);
 Route::post('/sync/mesure-clients', [SyncController::class, 'syncMesureClients']);
