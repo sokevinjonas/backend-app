@@ -53,11 +53,13 @@ class AuthController extends Controller
             'password' => Hash::make($request->password), // Hachage du mot de passe pour la sécurité
             'terms' => $request->terms,
         ]);
-
+           // Générer un token pour l'utilisateur
+           $token = $user->createToken('auth_token')->plainTextToken;
         // Retourner les données de l'utilisateur et le jeton
         return response()->json([
             'message' => 'Utilisateur créé avec succès',
             'user' => $user,
+            'token' => $token,
         ], 201);
     }
 
@@ -68,7 +70,7 @@ class AuthController extends Controller
         $validatedData = $request->validate([
             'pays' => 'required|string',
             'telephone' => 'required|string',
-            'password' => 'required|strin',
+            'password' => 'required|string',
         ]);
 
         // Vérifier si un utilisateur existe avec le pays et le téléphone
