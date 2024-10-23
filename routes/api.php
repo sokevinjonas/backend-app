@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SyncController;
+use App\Http\Controllers\SubscriptionController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -28,4 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/categories', [DataController::class, 'getCategories']);
     Route::get('/measurements', [DataController::class, 'getMeasurements']);
     // Route::get('/users', [DataController::class, 'getUsers']);
+    //souscription
+    Route::post('/subscriptions', [SubscriptionController::class, 'store']);
+    Route::get('/subscriptions/activate', [SubscriptionController::class, 'getActiveSubscription']);
 });
