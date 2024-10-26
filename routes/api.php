@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/categories', [DataController::class, 'getCategories']);
     Route::get('/measurements', [DataController::class, 'getMeasurements']);
     // Route::get('/users', [DataController::class, 'getUsers']);
+
     //souscription
     Route::post('/subscriptions', [SubscriptionController::class, 'store']);
     Route::get('/subscriptions/activate', [SubscriptionController::class, 'getActiveSubscription']);
