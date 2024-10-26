@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mesure_clients', function (Blueprint $table) {
+        Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->string('matricule_user');
-            $table->string('numero_client');
-            $table->json('mesures');
+            $table->string('titre');
+            $table->text('message');
+            $table->enum('type', ['commande', 'anniversaire', 'mise à jour', 'autre']);
+            $table->boolean('lu')->default(false);
+            $table->string('matricule_user')->nullable();
+            $table->string('commande_id')->nullable();
             $table->timestamps();
             $table->timestamp('sync_timestamp')->nullable();
         });
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mesure_clients');
+        Schema::dropIfExists('notifications');
     }
 };

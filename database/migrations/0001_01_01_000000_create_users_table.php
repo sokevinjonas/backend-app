@@ -16,15 +16,15 @@ return new class extends Migration
             $table->string('matricule')->unique();
             $table->string('etablissement');
             $table->string('adresse')->nullable();
-            $table->string('email')->unique()->nullable();
+            $table->string('email')->nullable();
             $table->string('logo')->nullable();
             $table->string('nom');
-            $table->unique(['pays', 'telephone'], 'unique_pays_telephone');
             $table->string('pays');
             $table->string('telephone');
             $table->string('role');
             $table->string('password');
             $table->boolean('terms');
+            $table->timestamp('sync_timestamp')->nullable();
             $table->timestamps();
         });
 

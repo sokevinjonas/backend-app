@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('mesure_clients', function (Blueprint $table) {
+        Schema::create('sync_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('matricule_user');
-            $table->string('numero_client');
-            $table->json('mesures');
-            $table->timestamps();
-            $table->timestamp('sync_timestamp')->nullable();
+            $table->string('table_name');
+            $table->string('action'); // create, update, delete
+            $table->unsignedBigInteger('record_id');
+            $table->json('data');
+            $table->timestamp('created_at');
         });
     }
 
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mesure_clients');
+        Schema::dropIfExists('sync_logs');
     }
 };

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
             $table->string('matricule_user');
-            $table->string('status');
+            $table->enum('status', ['attente', 'pret', 'urgente', 'annuler', 'livrer']);
             $table->string('numero_client');
             $table->text('detail');
             $table->text('besoin');
@@ -22,9 +22,9 @@ return new class extends Migration
             $table->decimal('avance', 10, 2);
             $table->decimal('reste', 10, 2);
             $table->date('livraison');
-            $table->foreign('matricule_user')->references('matricule')->on('users')->onDelete('cascade');
-            $table->foreign('numero_client')->references('numero_client')->on('clients')->onDelete('cascade');
+            $table->json('photos')->nullable();
             $table->timestamps();
+            $table->timestamp('sync_timestamp')->nullable();
         });
     }
 

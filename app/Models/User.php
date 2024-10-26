@@ -3,6 +3,9 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Client;
+use App\Models\SyncLog;
+use App\Models\Commande;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +22,37 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $guarded = [];
+
+    public function commandes()
+    {
+        return $this->hasMany(Commande::class, 'matricule_user', 'matricule');
+    }
+
+    public function clients()
+    {
+        return $this->hasMany(Client::class, 'matricule_user', 'matricule');
+    }
+
+    protected static function booted()
+    {
+        static::created(function ($model) {
+            SyncLog::create([
+                'table_name' => 'utilisateurs',
+                'action' => 'create',
+                'record_id' => $model->id,
+                'data' => $model->toJson()
+            ]);
+        });
+
+        static::updated(function ($model) {
+            SyncLog::create([
+                'table_name' => 'utilisateurs',
+                'action' => 'update',
+                'record_id' => $model->id,
+                'data' => $model->toJson()
+            ]);
+        });
+    }
 
     /**
      * The attributes that should be hidden for serialization.

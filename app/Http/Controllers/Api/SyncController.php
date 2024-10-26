@@ -2,130 +2,120 @@
 
 namespace App\Http\Controllers\Api;
 
+use Exception;
 use App\Models\User;
+use App\Models\Client;
 use App\Models\Category;
+use App\Models\Commande;
 use App\Models\Measurement;
+use App\Models\MesureClient;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 
 class SyncController extends Controller
 {
-     // Synchroniser les utilisateurs
-     public function syncUsers(Request $request)
-     {
-         $validatedData = $request->validate([
-             'users' => 'required|array',
-         ]);
+    private $tableMap = [
+        'users' => User::class,
+        'notifications' => Notification::class,
+        'mesure_clients' => MesureClient::class,
+        'commandes' => Commande::class,
+        'clients' => Client::class
+    ];
 
-         foreach ($validatedData['users'] as $userData) {
-             User::updateOrCreate(
-                 ['matricule' => $userData['matricule']],
-                 $userData
-             );
-         }
-
-         return response()->json(['message' => 'Users synchronized successfully.']);
-     }
-
-     // Synchroniser les catégories
-     public function syncCategories(Request $request)
+    public function synchroniser(Request $request)
     {
-        // Validation des données reçues
-        $validatedData = $request->validate([
-            'categories' => 'required|array',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        foreach ($validatedData['categories'] as $categoryData) {
-            // Vérifiez si le matricule_user existe dans la table users
-            $userExists = User::where('matricule', $categoryData['matricule_user'])->exists();
+            $matriculeUser = $request->input('matricule_user');
+            $donnees = $request->input('donnees');
+            $dernierSync = $request->input('dernier_sync');
 
-            if ($userExists) {
-                // Vérifiez si une catégorie avec le même label et matricule_user existe déjà
-                $category = Category::where('matricule_user', $categoryData['matricule_user'])
-                    ->where('label', $categoryData['label'])
-                    ->first();
+            $reponse = [
+                'succes' => true,
+                'modifications_serveur' => [],
+                'modifications_acceptees' => [],
+                'erreurs' => []
+            ];
 
-                if ($category) {
-                    // Mettre à jour la catégorie existante
-                    $category->update([
-                        'label' => $categoryData['label'], // Si vous voulez mettre à jour d'autres champs, ajoutez-les ici
-                    ]);
+            // Traiter chaque type de données
+            foreach ($donnees as $table => $items) {
+                $resultats = $this->synchroniserTable($table, $items, $matriculeUser);
+                $reponse['modifications_acceptees'][$table] = $resultats;
+            }
+
+            // Récupérer les modifications du serveur
+            $reponse['modifications_serveur'] = $this->obtenirModificationsServeur(
+                $matriculeUser,
+                $dernierSync
+            );
+
+            DB::commit();
+            return response()->json($reponse);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'succes' => false,
+                'erreur' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function synchroniserTable($table, $items, $matriculeUser)
+    {
+        $resultats = [];
+        $model = $this->tableMap[$table];
+
+        foreach ($items as $item) {
+            try {
+                if (!isset($item['id'])) {
+                    // Nouvelle entrée
+                    $nouvelItem = $model::create(array_merge($item, [
+                        'matricule_user' => $matriculeUser,
+                        'sync_timestamp' => now()
+                    ]));
+                    $resultats[] = [
+                        'id_local' => $item['id_local'] ?? null,
+                        'id_serveur' => $nouvelItem->id,
+                        'status' => 'créé'
+                    ];
                 } else {
-                    // Créer une nouvelle catégorie
-                    Category::create([
-                        'matricule_user' => $categoryData['matricule_user'],
-                        'label' => $categoryData['label'],
-                    ]);
+                    // Mise à jour
+                    $existant = $model::find($item['id']);
+                    if ($existant) {
+                        $existant->update(array_merge($item, [
+                            'sync_timestamp' => now()
+                        ]));
+                        $resultats[] = [
+                            'id' => $item['id'],
+                            'status' => 'mis à jour'
+                        ];
+                    }
                 }
-            } else {
-                return response()->json(['message' => "L'utilisateur avec le matricule {$categoryData['matricule_user']} n'existe pas."], 404);
+            } catch (\Exception $e) {
+                $resultats[] = [
+                    'id' => $item['id'] ?? null,
+                    'erreur' => $e->getMessage()
+                ];
             }
         }
 
-        // Réponse en JSON pour indiquer la réussite de l'opération
-        return response()->json(['message' => 'Categories synchronized successfully.']);
+        return $resultats;
     }
 
-
-    public function syncMeasurements(Request $request)
+    private function obtenirModificationsServeur($matriculeUser, $dernierSync)
     {
-        // Validation des données reçues
-        $validatedData = $request->validate([
-            'measurements' => 'required|array',
-        ]);
+        $modifications = [];
 
-        foreach ($validatedData['measurements'] as $measurementData) {
-            // Vérifiez si le matricule_user existe dans la table users
-            $userExists = User::where('matricule', $measurementData['matricule_user'])->exists();
-
-            if ($userExists) {
-                // Trouvez la mesure avec le même matricule_user et label
-                $measurement = Measurement::where('matricule_user', $measurementData['matricule_user'])
-                    ->where('label', $measurementData['label'])
-                    ->where('category', $measurementData['category'])
-                    ->first();
-
-                if ($measurement) {
-                    // Mettre à jour la mesure si elle existe
-                    $measurement->update([
-                        'category' => $measurementData['category'],
-                        'label' => $measurementData['label'],
-                    ]);
-                } else {
-                    // Créer une nouvelle mesure si elle n'existe pas
-                    Measurement::create([
-                        'matricule_user' => $measurementData['matricule_user'],
-                        'category' => $measurementData['category'],
-                        'label' => $measurementData['label'],
-                    ]);
-                }
-            } else {
-                return response()->json(['message' => "L'utilisateur avec le matricule {$measurementData['matricule_user']} n'existe pas."], 404);
-            }
+        foreach ($this->tableMap as $table => $model) {
+            $modifications[$table] = $model::where('matricule_user', $matriculeUser)
+                ->where('sync_timestamp', '>', $dernierSync)
+                ->get();
         }
 
-        // Réponse en JSON pour indiquer la réussite de l'opération
-        return response()->json(['message' => 'Measurements synchronized successfully.']);
+        return $modifications;
     }
-
-    // public function deleteMeasurement(Request $request, $matricule_user)
-    // {
-    //     $label = $request->query('label');
-    //     $category = $request->query('category');
-
-    //     // Logique pour supprimer la mesure, en fonction de label et category
-    //     $measurement = Measurement::where('matricule_user', $matricule_user)
-    //         ->where('label', $label)
-    //         ->where('category', $category)
-    //         ->first();
-
-    //     if ($measurement) {
-    //         $measurement->delete();
-    //         return response()->json(['message' => 'Mesure supprimée avec succès.'], 200);
-    //     }
-
-    //     return response()->json(['message' => 'Mesure non trouvée.'], 404);
-    // }
-
-
 }
